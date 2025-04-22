@@ -1,0 +1,69 @@
+ف كملخص ، 
+بده يكون عنا هيك : 
+Admin : 
+
+- Crud Custoemrs                        --DONE
+- Reset Customers Password              --DONE
+- attach container to customer          --DONE  
+- attach account statment to customer   --DONE  يحذف القديمة ويخلي الجديدة يعني بس رح يصفي ريكورد واحد لليوزر
+- Crud Common places                    --DONE
+- Crud Adv's ( الاعلانات )                --DONE
+- View Customers List                   --DONE
+- View Customer Containers List 	    --DONE
+- Send notfication for targeted users, ( for one or many users )  --DONE
+Customer :
+- View Containers for himself           --DONE
+- View Common Places.                   --DONE
+- View notifications 					--Mobile
+- View account statement 				--DONE
+- reset password 
+- Change mobile  number                 --DONE
+- Delete Account						--DONE
+
+Admin && Customer: 
+- Login                               --DONE
+- Logout                              --DONE
+
+Note : All Endpoints should require token to trigger, expect View Common Places and Avd's
+يعني بالعربي المستخدم بقدر يشوف الاعلانات والاماكن المشهورة بدون login ، وباقي ما تبقى بلزم يكون عامل  login ، والادمن لازم يكون عامل login عشان يعمل اي اشي من الفنكشنات يلي عنده 
+-
+
+
+ك رينج كم ، الاشي جداً بسيط، عنا يوزر بده يعمل login وعنا ادمن ، الادمن بده يعمل attach ل 2 types of files، وبدنا نعرض هاي الفايلز ، 
+وشغله ثانية الادمن بده يضيف common places و ad's للمحل تاعه ، 
+وسلامتك والنعنع ،
+يعني هاي الفكرة كامله خلينا نحكي 
+...
+ssh root@147.93.63.182
+
+
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'adamG@123'; 
+ mysql -u root -p
+ 
+ 
+ 147.93.63.182
+root
+Daraghmeh@123..
+
+...
+Fire base 
+groupadam74@gmail.com
+Adam123..
+
+....
+Notes : 
+API for retuning staticsts ! 
+db -> Add type column to containsers which will be fully shippment or partially 
+-> page for displaying users ( display attachmnents) 
+-> attacthe contains/back statments to files 
+-> ADs crud
+-> places crud
+-> send notification ) ممكن نبعت لكل اليوزرس الي الهم شحن جزئي فقط او كلي فقط وهكذا
+-> change user password 
+---> send notication when attach containers ..!
+ 
+
+---
+
+
+
