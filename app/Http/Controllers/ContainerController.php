@@ -29,14 +29,14 @@ class ContainerController extends Controller
     public function store(Request $request, $user_id)
     {
         //
-        Log::info("Store container .. file path! ". $request->file('file_path'));
+        Log::info("Store container .. file path! " . $request->file('file_path'));
         $validated = $request->validate([
             'file_name' => 'required|string|max:255',
             'file_path' => 'required|file|mimes:doc,docx,pdf,xls,xlsx,png,jpg,jpeg,gif,svg', // Add file validation
             'type' => 'required|integer|in:0,1',
             'tracking_number' => 'nullable|string|max:255',
         ]);
-        try{
+        try {
             $user = User::findOrFail($user_id);
             $file = $request->file('file_path');
             $fileName = $file->getClientOriginalName();
@@ -50,14 +50,14 @@ class ContainerController extends Controller
                 'tracking_number' => $validated['tracking_number'],
             ]);
 
-            Log::info("Container created ..!, ".$container->file_name);
+            Log::info("Container created ..!, " . $container->file_name);
             //Send fcm ! 
-            $user_ids =[$user->id];
-            $subject ="شحنه جديده";
+            $user_ids = [$user->id];
+            $subject = "شحنه جديده";
             $message = "عزيزي [اسم الزبون]، تمت إضافة شحنة جديدة ( نوع الشحنة ) إلى حسابك. يمكنك عرض تفاصيل الشحنة من خلال التطبيق.";
             $type = $request->type ? 'شحن جزئي' : 'شحن كلي';
             $message = str_replace(["[اسم الزبون]", "( نوع الشحنة )"], [$user->name, $type], $message);
-            
+
             $response = $this->fcmService->sendNotification(
                 $user_ids,
                 $subject,
@@ -67,9 +67,9 @@ class ContainerController extends Controller
                 'message' => 'Container created successfully.',
                 'container' => $container,
             ], 201);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Container not created '.$e->getMessage(),
+                'message' => 'Container not created ' . $e->getMessage(),
             ], 500);
         }
     }
