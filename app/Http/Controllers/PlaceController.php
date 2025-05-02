@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Place;
 use Illuminate\Http\Request;
 use Log;
+use Illuminate\Support\Facades\Storage;
 
 class PlaceController extends Controller
 {
@@ -30,9 +31,37 @@ class PlaceController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // public function store(Request $request)
+    // {
+    //     //
+    //     $validated = $request->validate([
+    //         'name' => 'required',
+    //         'image_name' => 'required',
+    //         'image_path' => 'required|file|mimes:png,jpg,jpeg,gif,svg',
+    //         'description' => 'nullable',
+    //         'location' => 'nullable',
+    //         'location_url' => 'nullable',
+    //         'city' => 'required',
+    //         'country' => 'required',
+    //     ]);
+    //     try {
+    //         $file = $request->file('image_path');
+    //         $path = $file->store('places', 'public');
+    //         $this->generalController->getPresignedUrl($path);
+    //         $place = Place::create(array_merge($validated, ['image_path' => $path]));
+    //         Log::info("Place created ..!, " . $place->name);
+    //         return response()->json([
+    //             'place' => $place,
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'message' => 'Place not created ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+
+    // }
     public function store(Request $request)
     {
-        //
         $validated = $request->validate([
             'name' => 'required',
             'image_name' => 'required',
@@ -43,22 +72,33 @@ class PlaceController extends Controller
             'city' => 'required',
             'country' => 'required',
         ]);
+
         try {
+            // رفع الصورة إلى S3 داخل مجلد places
             $file = $request->file('image_path');
-            $path = $file->store('places', 'public');
-            $this->generalController->getPresignedUrl($path);
-            $place = Place::create(array_merge($validated, ['image_path' => $path]));
+            $path = $file->store('places', 's3');
+
+            // توليد رابط مؤقت لمدة 20 دقيقة
+            $url = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(20));
+
+            // إنشاء السجل في قاعدة البيانات
+            $place = Place::create(array_merge($validated, [
+                'image_path' => $path, // أو $url إذا أردت تخزين الرابط المباشر
+            ]));
+
             Log::info("Place created ..!, " . $place->name);
+
             return response()->json([
                 'place' => $place,
+                'presigned_url' => $url, // اختياري فقط للعرض
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Place not created ' . $e->getMessage(),
+                'message' => 'Place not created: ' . $e->getMessage(),
             ], 500);
         }
-
     }
+
 
     /**
      * Display the specified resource.

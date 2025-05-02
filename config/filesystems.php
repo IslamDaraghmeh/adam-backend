@@ -53,8 +53,8 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
-            'throw' => false,
-            'report' => false,
+            'visibility' => 'private',
+
         ],
 
 

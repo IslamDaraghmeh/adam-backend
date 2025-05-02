@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Ad;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Log;
 
 class AdController extends Controller
@@ -36,27 +37,63 @@ class AdController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
+    // public function store(Request $request)
+    // {
+    //     //
+    //     $validated = $request->validate([
+    //         'title' => 'required',
+    //         'description' => 'required',
+    //         'image_path' => 'required|file|mimes:png,jpg,jpeg,gif,svg',
+    //         'image_name' => 'required',
+    //     ]);
+    //     try {
+    //         $file = $request->file('image_path');
+    //         $path = $file->store('ads', 'public');
+    //         $this->generalController->getPresignedUrl($path);
+    //         $ad = Ad::create(array_merge($validated, ['image_path' => $path]));
+    //         Log::info("Ad created ..!, " . $ad->title);
+    //         return response()->json([
+    //             'ad' => $ad,
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'message' => 'Ad not created ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
     public function store(Request $request)
     {
-        //
         $validated = $request->validate([
             'title' => 'required',
             'description' => 'required',
             'image_path' => 'required|file|mimes:png,jpg,jpeg,gif,svg',
             'image_name' => 'required',
         ]);
+
         try {
+            // رفع الصورة إلى S3 داخل مجلد ads
             $file = $request->file('image_path');
-            $path = $file->store('ads', 'public');
-            $this->generalController->getPresignedUrl($path);
-            $ad = Ad::create(array_merge($validated, ['image_path' => $path]));
+            $path = $file->store('ads', 's3');
+
+            // توليد رابط مؤقت لمدة 20 دقيقة
+            $url = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(20));
+
+            // إنشاء الإعلان مع حفظ المسار
+            $ad = Ad::create(array_merge($validated, [
+                'image_path' => $path, // أو استخدم $url إذا أردت تخزين الرابط المؤقت
+            ]));
+
             Log::info("Ad created ..!, " . $ad->title);
+
             return response()->json([
                 'ad' => $ad,
+                'presigned_url' => $url, // اختياري للعرض مباشرة في الواجهة الأمامية
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Ad not created ' . $e->getMessage(),
+                'message' => 'Ad not created: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -83,9 +120,36 @@ class AdController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    // public function update(Request $request, string $id)
+    // {
+    //     //
+    //     $validated = $request->validate([
+    //         'title' => 'required',
+    //         'description' => 'required',
+    //         'image_path' => 'required|file|mimes:png,jpg,jpeg,gif,svg',
+    //         'image_name' => 'required',
+    //         'is_published' => 'required',
+    //     ]);
+    //     try {
+    //         $ad = Ad::findOrFail($id);
+    //         $file = $request->file('image_path');
+    //         $path = $file->store('ads', 'public');
+    //         $this->generalController->getPresignedUrl($path);
+
+    //         $ad->update(array_merge($validated, ['image_path' => $path]));
+    //         Log::info("Ad updated ..!, " . $ad->title);
+    //         return response()->json([
+    //             'ad' => $ad,
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'message' => 'Ad not updated ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
     public function update(Request $request, string $id)
     {
-        //
         $validated = $request->validate([
             'title' => 'required',
             'description' => 'required',
@@ -93,23 +157,36 @@ class AdController extends Controller
             'image_name' => 'required',
             'is_published' => 'required',
         ]);
+
         try {
             $ad = Ad::findOrFail($id);
-            $file = $request->file('image_path');
-            $path = $file->store('ads', 'public');
-            $this->generalController->getPresignedUrl($path);
 
-            $ad->update(array_merge($validated, ['image_path' => $path]));
+            // رفع الصورة إلى S3 داخل مجلد ads
+            $file = $request->file('image_path');
+            $path = $file->store('ads', 's3');
+
+            // توليد presigned URL لمدة 20 دقيقة
+            $url = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(20));
+
+            // تحديث الإعلان
+            $ad->update(array_merge($validated, [
+                'image_path' => $path, // أو استخدم $url إذا أردت تخزين الرابط المباشر
+            ]));
+
             Log::info("Ad updated ..!, " . $ad->title);
+
             return response()->json([
                 'ad' => $ad,
+                'presigned_url' => $url, // اختياري للعرض المباشر
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Ad not updated ' . $e->getMessage(),
+                'message' => 'Ad not updated: ' . $e->getMessage(),
             ], 500);
         }
     }
+
 
     /**
      * Remove the specified resource from storage.
