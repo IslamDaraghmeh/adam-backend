@@ -10,10 +10,12 @@ use Log;
 class ContainerController extends Controller
 {
     protected FCMNotificationService $fcmService;
+    protected $generalController;
 
     public function __construct(FCMNotificationService $fcmService)
     {
         $this->fcmService = $fcmService;
+        $this->generalController = new GeneralController();
     }
     /**
      * Display a listing of the resource.
@@ -41,6 +43,7 @@ class ContainerController extends Controller
             $file = $request->file('file_path');
             $fileName = $file->getClientOriginalName();
             $path = $file->store('containers', 'public');
+            $this->generalController->getPresignedUrl($path);
 
             // Create container associated with the user
             $container = $user->containers()->create([

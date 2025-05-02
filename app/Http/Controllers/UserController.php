@@ -10,14 +10,19 @@ use Http;
 use Illuminate\Http\Request;
 use Log;
 use App\Services\FCMNotificationService;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class UserController extends Controller
 {
+
+
     protected FCMNotificationService $fcmService;
 
     public function __construct(FCMNotificationService $fcmService)
     {
         $this->fcmService = $fcmService;
+
     }
     /**
      * Display a listing of the resource.
@@ -31,6 +36,8 @@ class UserController extends Controller
             'users' => $users,
         ], 200);
     }
+
+
 
     /**
      * Store a newly created resource in storage.
@@ -46,18 +53,18 @@ class UserController extends Controller
             'address' => 'nullable',
             'city' => 'nullable',
         ]);
-        try{
+        try {
             $user = User::create(array_merge($validated, ['is_admin' => 0]));
-            Log::info("User created ..!, ".$user->name);
+            Log::info("User created ..!, " . $user->name);
             return response()->json([
                 'user' => $user,
             ], 201);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'User not created '.$e->getMessage(),
+                'message' => 'User not created ' . $e->getMessage(),
             ], 500);
         }
-        
+
     }
 
     /**
@@ -66,13 +73,13 @@ class UserController extends Controller
     public function show(string $id)
     {
         //
-        try{
+        try {
             $user = User::findOrFail($id);
-            Log::info("User fetched ..!, ".$user->name);
+            Log::info("User fetched ..!, " . $user->name);
             return response()->json([
                 'user' => $user,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'User not found',
             ]);
@@ -93,14 +100,14 @@ class UserController extends Controller
             'address' => 'nullable',
             'city' => 'nullable',
         ]);
-        try{
+        try {
             $user = User::findOrFail($id);
             $user->update($validated);
-            Log::info("User updated ..!, ".$user->name);
+            Log::info("User updated ..!, " . $user->name);
             return response()->json([
                 'user' => $user,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'User not found',
             ]);
@@ -108,21 +115,21 @@ class UserController extends Controller
     }
     public function adminUpdate(Request $request, string $id)
     {
-         $validated = $request->validate([
+        $validated = $request->validate([
             'name' => 'required',
             //'email' => 'required|email',
             'phone' => 'required',
             'address' => 'nullable',
             'city' => 'nullable',
         ]);
-        try{
+        try {
             $user = User::findOrFail($id);
             $user->update($validated);
-            Log::info("User updated ..!, ".$user->name);
+            Log::info("User updated ..!, " . $user->name);
             return response()->json([
                 'user' => $user,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'User not found',
             ]);
@@ -134,78 +141,83 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         //
-        try{
+        try {
             $user = User::findOrFail($id);
             $user->containers()->delete();
             $user->account_statments()->delete();
             $user->delete();
-            Log::info("User deleted ..!, ".$user->name);
+            Log::info("User deleted ..!, " . $user->name);
             return response()->json([
                 "message" => "Resource deleted successfully.",
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'User not found',
             ]);
         }
     }
-    public function resetPassword(Request $request, string $id){
+    public function resetPassword(Request $request, string $id)
+    {
         $validated = $request->validate([
             'password' => 'required|min:8',
         ]);
-        try{
+        try {
             $user = User::findOrFail($id);
             $user->password = Hash::make($validated['password']);
             $user->save();
-            Log::info("User password reset ..!, ".$user->name);
+            Log::info("User password reset ..!, " . $user->name);
             return response()->json([
-                 "message" => "Resource updated successfully.",
+                "message" => "Resource updated successfully.",
                 'user' => $user,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'User not found',
             ]);
         }
     }
-    public function getUserContainers(string $id){
-        try{
+    public function getUserContainers(string $id)
+    {
+        try {
             $user = User::findOrFail($id);
             $containers = $user->containers;
-            Log::info("User containers fetched ..!, ".$user->name);
+            Log::info("User containers fetched ..!, " . $user->name);
             return response()->json([
                 'containers' => $containers,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'User not found',
             ]);
         }
     }
-    public function getContainersForLoggedUser(Request $request){
+    public function getContainersForLoggedUser(Request $request)
+    {
         $user = auth()->user();
         $containers = $user->containers;
-        Log::info("User containers fetched ..!, ".$user->name);
+        Log::info("User containers fetched ..!, " . $user->name);
         return response()->json([
             'containers' => $containers,
         ], 200);
     }
-    public function getAccountStatmentsForLoggedUser(Request $request){
+    public function getAccountStatmentsForLoggedUser(Request $request)
+    {
         $user = auth()->user();
         $account_statments = $user->account_statments;
-        Log::info("User account_statments fetched ..!, ".$user->name);
+        Log::info("User account_statments fetched ..!, " . $user->name);
         return response()->json([
             'account_statments' => $account_statments,
         ], 200);
     }
-    public function changeMobile(Request $request){
+    public function changeMobile(Request $request)
+    {
         $user = auth()->user();
         $request->validate([
             'phone' => 'required|string|regex:/^(\+?\d{1,4}[\s-])?(?!0+\s+,?$)\d{10,13}$/|unique:users,phone',
         ]);
         $user->phone = $request->phone;
         $user->save();
-        Log::info("User mobile changed ..!, ".$user->name);
+        Log::info("User mobile changed ..!, " . $user->name);
         return response()->json([
             'status' => true,
             'message' => 'Mobile number updated successfully',
@@ -221,16 +233,16 @@ class UserController extends Controller
             'user_ids.*' => 'integer|exists:users,id'
         ]);
         $userIds = $request->user_ids;
-        if(isset($request->notificationType)){
-            if($request->notificationType == "A"){
+        if (isset($request->notificationType)) {
+            if ($request->notificationType == "A") {
                 $userIds = User::whereHas('containers', function ($query) {
                     $query->where('type', 0);
                 })->pluck('id')->toArray();
-            }else if($request->notificationType == "B"){
+            } else if ($request->notificationType == "B") {
                 $userIds = User::whereHas('containers', function ($query) {
                     $query->where('type', 1);
                 })->pluck('id')->toArray();
-            }else {
+            } else {
                 $userIds = $request->user_ids;
             }
         }
@@ -245,7 +257,8 @@ class UserController extends Controller
 
     }
 
-    public function StoreMobileToken(Request $request){
+    public function StoreMobileToken(Request $request)
+    {
         $request->validate([
             'device_token' => 'required|string|max:255',
         ]);
@@ -256,37 +269,39 @@ class UserController extends Controller
                 'device_token' => $request->device_token,
             ]);
         }
-        Log::info("User token stored ..!, ".$user->name);
+        Log::info("User token stored ..!, " . $user->name);
         return response()->json([
             'status' => true,
             'message' => 'Token stored successfully',
         ], 200);
     }
-    public function getUserAccountStatments(string $id){
-        try{
+    public function getUserAccountStatments(string $id)
+    {
+        try {
             $user = User::findOrFail($id);
             $account_statments = $user->account_statments;
-            Log::info("User account_statments fetched ..!, ".$user->name);
+            Log::info("User account_statments fetched ..!, " . $user->name);
             return response()->json([
                 'account_statments' => $account_statments,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'User not found',
             ]);
         }
     }
-    public function getUploadedFile(Request $request, string $id){
-        try{
+    public function getUploadedFile(Request $request, string $id)
+    {
+        try {
             $user = User::findOrFail($id);
             $files = $user->files();
-            Log::info("User files fetched ..!, ".$user->name);
+            Log::info("User files fetched ..!, " . $user->name);
             return response()->json([
                 'files' => $files,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'User not found'.$e    ,
+                'message' => 'User not found' . $e,
             ]);
         }
     }

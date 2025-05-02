@@ -8,6 +8,12 @@ use Log;
 
 class PlaceController extends Controller
 {
+    private $generalController;
+
+    public function __construct()
+    {
+        $this->generalController = new GeneralController();
+    }
     /**
      * Display a listing of the resource.
      */
@@ -37,20 +43,21 @@ class PlaceController extends Controller
             'city' => 'required',
             'country' => 'required',
         ]);
-        try{
+        try {
             $file = $request->file('image_path');
             $path = $file->store('places', 'public');
+            $this->generalController->getPresignedUrl($path);
             $place = Place::create(array_merge($validated, ['image_path' => $path]));
-            Log::info("Place created ..!, ".$place->name);
+            Log::info("Place created ..!, " . $place->name);
             return response()->json([
                 'place' => $place,
             ], 201);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Place not created '.$e->getMessage(),
+                'message' => 'Place not created ' . $e->getMessage(),
             ], 500);
         }
-        
+
     }
 
     /**
@@ -59,18 +66,18 @@ class PlaceController extends Controller
     public function show(string $id)
     {
         //
-        try{
+        try {
             $place = Place::findOrFail($id);
-            Log::info("Place fetched ..!, ".$place->name);
+            Log::info("Place fetched ..!, " . $place->name);
             return response()->json([
                 'place' => $place,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Place not found',
             ]);
         }
-        
+
     }
 
     /**
@@ -87,19 +94,17 @@ class PlaceController extends Controller
             'city' => 'required',
             'country' => 'required',
         ]);
-        try{
+        try {
             $place = Place::findOrFail($id);
-            // $file = $request->file('image_path');
-            // $path = $file->store('places', 'public');
-            // $place->update(array_merge($validated, ['image_path' => $path]));
+
             $place->update($validated);
-            Log::info("Place updated ..!, ".$place->name);
+            Log::info("Place updated ..!, " . $place->name);
             return response()->json([
                 'place' => $place,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Place not updated '.$e->getMessage(),
+                'message' => 'Place not updated ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -110,14 +115,14 @@ class PlaceController extends Controller
     public function destroy(string $id)
     {
         //
-        try{
+        try {
             $place = Place::findOrFail($id);
             $place->delete();
-            Log::info("Place deleted ..!, ".$place->name);
+            Log::info("Place deleted ..!, " . $place->name);
             return response()->json([
                 "message" => "Resource deleted successfully.",
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Place not found',
             ]);

@@ -10,10 +10,11 @@ use Log;
 class AccountStatmentController extends Controller
 {
     protected FCMNotificationService $fcmService;
-
+    protected $generalController;
     public function __construct(FCMNotificationService $fcmService)
     {
         $this->fcmService = $fcmService;
+        $this->generalController = new GeneralController();
     }
     /**
      * Display a listing of the resource.
@@ -34,11 +35,13 @@ class AccountStatmentController extends Controller
             'file_path' => 'required|file|mimes:doc,docx,pdf,xls,xlsx,png,jpg,jpeg,gif,svg|max:2048',
             'tracking_number' => 'nullable|string|max:255',
         ]);
-        try{
+        try {
             $user = User::findOrFail($user_id);
             $file = $request->file('file_path');
             $fileName = $file->getClientOriginalName();
             $path = $file->store('account_statments', 'public');
+            $this->generalController->getPresignedUrl($path);
+
             $user->account_statments()->delete();
             $accountStatment = $user->account_statments()->create([
                 'file_name' => $validated['file_name'],
@@ -46,10 +49,10 @@ class AccountStatmentController extends Controller
                 'tracking_number' => $validated['tracking_number'],
             ]);
 
-            Log::info("Account-statment created ..!, ".$accountStatment->file_name);
+            Log::info("Account-statment created ..!, " . $accountStatment->file_name);
             //Send fcm ! 
-            $user_ids =[$user->id];
-            $subject ="اصدار كشف حساب";
+            $user_ids = [$user->id];
+            $subject = "اصدار كشف حساب";
             $message = "عزيزي [اسم الزبون] ، تم إصدار كشف حساب جديد خاص بك. يمكنك عرض التفاصيل من خلال التطبيق.";
             $message = str_replace(["[اسم الزبون]"], [$user->name], $message);
 
@@ -62,9 +65,9 @@ class AccountStatmentController extends Controller
                 'message' => 'Account-statment created successfully.',
                 'account_statment' => $accountStatment,
             ], 201);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Account-statment not created '.$e->getMessage(),
+                'message' => 'Account-statment not created ' . $e->getMessage(),
             ], 500);
         }
     }

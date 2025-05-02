@@ -12,10 +12,10 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        //
+
         $user = auth()->user();
         $notifications = $user->notifications;
-        Log::info("User notifications fetched ..!, ".$user->name);
+        Log::info("User notifications fetched ..!, " . $user->name);
         return response()->json([
             'notifications' => $notifications,
         ], 200);

@@ -8,6 +8,11 @@ use Log;
 
 class AdController extends Controller
 {
+    protected $generalController;
+    public function __construct()
+    {
+        $this->generalController = new GeneralController();
+    }
     /**
      * Display a listing of the resource.
      */
@@ -20,7 +25,8 @@ class AdController extends Controller
             'ads' => $ads,
         ], 200);
     }
-    public function getAllAds(){
+    public function getAllAds()
+    {
         $ads = Ad::get();
         Log::info("All ads fetched ..!");
         return response()->json([
@@ -39,17 +45,18 @@ class AdController extends Controller
             'image_path' => 'required|file|mimes:png,jpg,jpeg,gif,svg',
             'image_name' => 'required',
         ]);
-        try{
+        try {
             $file = $request->file('image_path');
             $path = $file->store('ads', 'public');
+            $this->generalController->getPresignedUrl($path);
             $ad = Ad::create(array_merge($validated, ['image_path' => $path]));
-            Log::info("Ad created ..!, ".$ad->title);
+            Log::info("Ad created ..!, " . $ad->title);
             return response()->json([
                 'ad' => $ad,
             ], 201);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Ad not created '.$e->getMessage(),
+                'message' => 'Ad not created ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -60,15 +67,15 @@ class AdController extends Controller
     public function show(string $id)
     {
         //
-        try{
+        try {
             $ad = Ad::findOrFail($id);
-            Log::info("Ad fetched ..!, ".$ad->title);
+            Log::info("Ad fetched ..!, " . $ad->title);
             return response()->json([
                 'ad' => $ad,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Ad not fetched '.$e->getMessage(),
+                'message' => 'Ad not fetched ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -86,18 +93,20 @@ class AdController extends Controller
             'image_name' => 'required',
             'is_published' => 'required',
         ]);
-        try{
+        try {
             $ad = Ad::findOrFail($id);
             $file = $request->file('image_path');
             $path = $file->store('ads', 'public');
+            $this->generalController->getPresignedUrl($path);
+
             $ad->update(array_merge($validated, ['image_path' => $path]));
-            Log::info("Ad updated ..!, ".$ad->title);
+            Log::info("Ad updated ..!, " . $ad->title);
             return response()->json([
                 'ad' => $ad,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Ad not updated '.$e->getMessage(),
+                'message' => 'Ad not updated ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -108,30 +117,31 @@ class AdController extends Controller
     public function destroy(string $id)
     {
         //
-        try{
+        try {
             $ad = Ad::findOrFail($id);
             $ad->delete();
-            Log::info("Ad deleted ..!, ".$ad->title);
+            Log::info("Ad deleted ..!, " . $ad->title);
             return response()->json([
                 "message" => "Resource deleted successfully.",
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Ad not found',
             ]);
         }
     }
-    public function publishAndUnpublish(Request $request, string $id){
-        try{
+    public function publishAndUnpublish(Request $request, string $id)
+    {
+        try {
             $ad = Ad::findOrFail($id);
             $ad->update(['is_published' => !$ad->is_published]);
-            Log::info("Ad updated ..!, ".$ad->title);
+            Log::info("Ad updated ..!, " . $ad->title);
             return response()->json([
                 'ad' => $ad,
             ], 200);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Ad not updated '.$e->getMessage(),
+                'message' => 'Ad not updated ' . $e->getMessage(),
             ], 500);
         }
     }
