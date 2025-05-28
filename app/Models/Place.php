@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Place extends Model
 {
@@ -25,6 +26,6 @@ class Place extends Model
     protected $appends = ['public_url'];
     public function getPublicUrlAttribute()
     {
-        return url('storage/' . $this->image_path);
+        return Storage::disk('s3')->url($this->image_path);
     }
 }

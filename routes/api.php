@@ -10,17 +10,14 @@ use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::post('login', [AuthController::class, 'login']);
 Route::apiResource('places', PlaceController::class)->only(['index', 'show']);
 Route::apiResource('ads', AdController::class)->only(['index', 'show']);
 Route::get('admin/ads', [AdController::class, 'getAllAds']);
 Route::get('storage/{path}', function ($path) {
-    $file = Storage::disk('public')->path($path);
-
-    abort_unless(file_exists($file), 404);
-
-    return response()->file($file);
+    return Storage::disk('s3')->response($path);
 })->where('path', expression: '.*');
 
 Route::get('healthz', function () {
