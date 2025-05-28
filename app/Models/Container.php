@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Container extends Model
 {
@@ -31,6 +32,6 @@ class Container extends Model
     }
     public function getPublicUrlAttribute()
     {
-        return url('storage/' . $this->file_path);
+        return Storage::disk('s3')->url($this->file_path);
     }
 }
